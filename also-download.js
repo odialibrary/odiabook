@@ -1,37 +1,26 @@
-(async function() {
-    const container = document.getElementById('also-download');
-    if (!container) return;
+var numPosts = 6;  // Number of links
 
-    const feedURL = 'https://odiabook.in/feeds/posts/default?alt=json&max-results=50';
-    
-    try {
-        const response = await fetch(feedURL);
-        const data = await response.json();
-        const posts = data.feed.entry || [];
+function showAlsoRead(data) {
+  var entries = data.feed.entry;
+  var ul = document.getElementById("also-read");
 
-        function shuffleArray(arr) {
-            for (let i = arr.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [arr[i], arr[j]] = [arr[j], arr[i]];
-            }
-            return arr;
-        }
+  // Shuffle posts randomly
+  entries.sort(() => 0.5 - Math.random());
 
-        const randomPosts = shuffleArray(posts).slice(0, 7);
+  // Pick only numPosts
+  entries.slice(0, numPosts).forEach(entry => {
+    // Replace | with - in post title
+    var title = entry.title.$t.replace(/\|/g, " - ");
+    var link = entry.link.find(l => l.rel === "alternate").href;
+    var li = document.createElement("li");
+    li.innerHTML = '<a href="' + link + '" target="_blank">' + title + '</a>';
+    ul.appendChild(li);
+  });
+}
 
-        const list = document.createElement('ul');
-        randomPosts.forEach(post => {
-            const title = post.title.$t.toUpperCase(); // Convert to ALL CAPS
-            const link = post.link.find(l => l.rel === 'alternate').href;
-            const li = document.createElement('li');
-
-            li.innerHTML = `<a href="${link}" target="_blank">${title} | BOOK DOWNLOAD</a>`;
-            list.appendChild(li);
-        });
-
-        container.appendChild(list);
-    } catch (error) {
-        console.error('Error fetching posts:', error);
-        container.textContent = 'Unable to load posts at this time.';
-    }
+// Load blog feed dynamically
+(function() {
+  var script = document.createElement('script');
+  script.src = "https://odiabook.in/feeds/posts/default?alt=json-in-script&callback=showAlsoRead";
+  document.body.appendChild(script);
 })();
